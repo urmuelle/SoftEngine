@@ -363,13 +363,16 @@ namespace SoftEngine
             float z1 = Interpolate(pa.Z, pb.Z, gradient1);
             float z2 = Interpolate(pc.Z, pd.Z, gradient2);
 
-            // drawing a line from left (sx) to right (ex)
+            var snl = Interpolate(data.Ndotla, data.Ndotlb, gradient1);
+            var enl = Interpolate(data.Ndotlc, data.Ndotld, gradient2);
+
+            // drawing a line from left (sx) to right (ex) 
             for (var x = sx; x < ex; x++)
             {
                 float gradient = (x - sx) / (float)(ex - sx);
 
                 var z = Interpolate(z1, z2, gradient);
-                var ndotl = data.Ndotla;
+                var ndotl = Interpolate(snl, enl, gradient);
                 // changing the color value using the cosine of the angle
                 // between the light vector and the normal vector
                 DrawPoint(new Vector3(x, data.CurrentY, z), color * ndotl);
@@ -418,19 +421,15 @@ namespace SoftEngine
             Vector3 p2 = v2.Coordinates;
             Vector3 p3 = v3.Coordinates;
 
-            // normal face's vector is the average normal between each vertex's normal
-            // computing also the center point of the face
-            Vector3 vnFace = (v1.Normal + v2.Normal + v3.Normal) / 3;
-            Vector3 centerPoint = (v1.WorldCoordinates + v2.WorldCoordinates + v3.WorldCoordinates) / 3;
-
             // Light position
-            Vector3 lightPos = new (0, 10, 10);
-
+            Vector3 lightPos = new Vector3(0, 10, 10);
             // computing the cos of the angle between the light vector and the normal vector
             // it will return a value between 0 and 1 that will be used as the intensity of the color
-            float ndotl = ComputeNDotL(centerPoint, vnFace, lightPos);
+            float nl1 = ComputeNDotL(v1.WorldCoordinates, v1.Normal, lightPos);
+            float nl2 = ComputeNDotL(v2.WorldCoordinates, v2.Normal, lightPos);
+            float nl3 = ComputeNDotL(v3.WorldCoordinates, v3.Normal, lightPos);
 
-            var data = new ScanLineData { Ndotla = ndotl };
+            var data = new ScanLineData { };
 
             // computing lines' directions
             float dP1P2, dP1P3;
@@ -455,17 +454,6 @@ namespace SoftEngine
                 dP1P3 = 0;
             }
 
-            // First case where triangles are like that:
-            // P1
-            // -
-            // --
-            // - -
-            // -  -
-            // -   - P2
-            // -  -
-            // - -
-            // -
-            // P3
             if (dP1P2 > dP1P3)
             {
                 for (var y = (int)p1.Y; y <= (int)p3.Y; y++)
@@ -474,26 +462,22 @@ namespace SoftEngine
 
                     if (y < p2.Y)
                     {
+                        data.Ndotla = nl1;
+                        data.Ndotlb = nl3;
+                        data.Ndotlc = nl1;
+                        data.Ndotld = nl2;
                         ProcessScanLine(data, v1, v3, v1, v2, color);
                     }
                     else
                     {
+                        data.Ndotla = nl1;
+                        data.Ndotlb = nl3;
+                        data.Ndotlc = nl2;
+                        data.Ndotld = nl3;
                         ProcessScanLine(data, v1, v3, v2, v3, color);
                     }
                 }
             }
-
-            // First case where triangles are like that:
-            //       P1
-            //        -
-            //       --
-            //      - -
-            //     -  -
-            // P2 -   -
-            //     -  -
-            //      - -
-            //        -
-            //       P3
             else
             {
                 for (var y = (int)p1.Y; y <= (int)p3.Y; y++)
@@ -502,10 +486,18 @@ namespace SoftEngine
 
                     if (y < p2.Y)
                     {
+                        data.Ndotla = nl1;
+                        data.Ndotlb = nl2;
+                        data.Ndotlc = nl1;
+                        data.Ndotld = nl3;
                         ProcessScanLine(data, v1, v2, v1, v3, color);
                     }
                     else
                     {
+                        data.Ndotla = nl2;
+                        data.Ndotlb = nl3;
+                        data.Ndotlc = nl1;
+                        data.Ndotld = nl3;
                         ProcessScanLine(data, v2, v3, v1, v3, color);
                     }
                 }
@@ -518,6 +510,8 @@ namespace SoftEngine
         {
             // To understand this part, please read the prerequisites resources
             var viewMatrix = Matrix.LookAtLH(camera.Position, camera.Target, Vector3.UnitY);
+
+            // The original code used RH variant of that function. That does not make sense. Fixed now.
             var projectionMatrix = Matrix.PerspectiveFovLH(
                 0.78f,
                 (float)renderWidth / renderHeight,
