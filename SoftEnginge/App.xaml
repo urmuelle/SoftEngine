@@ -1,7 +1,7 @@
-﻿<Application x:Class="SoftEnginge.App"
+﻿<Application x:Class="SoftEngine.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:SoftEnginge"
+             xmlns:local="clr-namespace:SoftEngine"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
          

@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32421.90
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoftEnginge", "SoftEnginge\SoftEnginge.csproj", "{51078A3A-388F-4CF8-88BA-E4A07B110FA5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoftEngine", "SoftEnginge\SoftEngine.csproj", "{51078A3A-388F-4CF8-88BA-E4A07B110FA5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoftEngineUnitTests", "SoftEngineUnitTests\SoftEngineUnitTests.csproj", "{CF1D2EF8-ADBC-4E82-AAB5-9F3DFE3F9C5B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{51078A3A-388F-4CF8-88BA-E4A07B110FA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{51078A3A-388F-4CF8-88BA-E4A07B110FA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{51078A3A-388F-4CF8-88BA-E4A07B110FA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF1D2EF8-ADBC-4E82-AAB5-9F3DFE3F9C5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF1D2EF8-ADBC-4E82-AAB5-9F3DFE3F9C5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF1D2EF8-ADBC-4E82-AAB5-9F3DFE3F9C5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF1D2EF8-ADBC-4E82-AAB5-9F3DFE3F9C5B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
