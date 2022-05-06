@@ -19,6 +19,7 @@ namespace SoftEngine
         public Vector3 Normal;
         public Vector3 Coordinates;
         public Vector3 WorldCoordinates;
+        public Vector2 TextureCoordinates;
     }
 
     public class Mesh
@@ -39,5 +40,7 @@ namespace SoftEngine
         public Vector3 Position { get; set; }
 
         public Vector3 Rotation { get; set; }
+
+        public Texture Texture { get; set; }
     }
 }
