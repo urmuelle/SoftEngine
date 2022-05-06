@@ -5,6 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SoftEngine"
         mc:Ignorable="d"
-        Title="Soft Engine Window" Height="480" Width="640">
-    <Image HorizontalAlignment="Left" Height="480" Margin="0,0,0,0" VerticalAlignment="Top" Width="640" Grid.ColumnSpan="2" Name="Image1"/>
+        Title="Soft Engine Window" Height="600" Width="640">
+    <Grid>
+        <Image HorizontalAlignment="Left" VerticalAlignment="Top" Height="480" Width="640" Grid.ColumnSpan="2" Name="Image1" Margin="0,0,0,0"/>
+        <TextBlock x:Name="fps" VerticalAlignment="Bottom" Margin="0,520,0,10"><Run Language="de-ch" Text="FPS: "/></TextBlock>
+    </Grid>
 </Window>

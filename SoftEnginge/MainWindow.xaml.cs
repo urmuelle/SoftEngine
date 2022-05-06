@@ -5,6 +5,7 @@
 
 namespace SoftEngine
 {
+    using System;
     using System.Windows;
     using System.Windows.Media;
     using System.Windows.Media.Imaging;
@@ -18,6 +19,7 @@ namespace SoftEngine
         private Device device;
         private Mesh[] meshes;
         private Camera camera = new ();
+        private DateTime previousDate;
 
         public MainWindow()
         {
@@ -55,6 +57,13 @@ namespace SoftEngine
         // Rendering loop handler
         private void CompositionTarget_Rendering(object sender, object e)
         {
+            // Fps
+            var now = DateTime.Now;
+            var currentFps = 1000.0 / (now - previousDate).TotalMilliseconds;
+            previousDate = now;
+
+            fps.Text = string.Format("{0:0.00} fps", currentFps);
+
             device.Clear(0, 0, 0, 255);
 
             foreach (var mesh in meshes)

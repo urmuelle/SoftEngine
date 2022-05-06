@@ -20,6 +20,8 @@ namespace SoftEngine
         private readonly int renderHeight;
         private byte[] backBuffer;
         private WriteableBitmap bmp;
+        private object[] lockBuffer;
+
 
         public Device(WriteableBitmap bmp)
         {
@@ -29,8 +31,14 @@ namespace SoftEngine
 
             // the back buffer size is equal to the number of pixels to draw
             // on screen (width*height) * 4 (R,G,B & Alpha values).
-            backBuffer = new byte[bmp.PixelWidth * bmp.PixelHeight * 4];
-            depthBuffer = new float[bmp.PixelWidth * bmp.PixelHeight];
+            backBuffer = new byte[renderWidth * renderHeight * 4];
+            depthBuffer = new float[renderWidth * renderHeight];
+            lockBuffer = new object[renderWidth * renderHeight];
+
+            for (var i = 0; i < lockBuffer.Length; i++)
+            {
+                lockBuffer[i] = new object();
+            }
         }
 
         // This method is called to clear the back buffer with a specific color
@@ -152,8 +160,8 @@ namespace SoftEngine
             bmp.Invalidate();
             */
 
-            Int32Rect rect = new (0, 0, bmp.PixelWidth, bmp.PixelHeight);
-            int stride = bmp.PixelWidth * (bmp.Format.BitsPerPixel / 8);
+            Int32Rect rect = new (0, 0, renderWidth, renderHeight);
+            int stride = renderWidth * (bmp.Format.BitsPerPixel / 8);
             bmp.WritePixels(rect, backBuffer, stride, 0);
 
             try
@@ -162,7 +170,7 @@ namespace SoftEngine
                 bmp.Lock();
 
                 // Specify the area of the bitmap that changed.
-                bmp.AddDirtyRect(new Int32Rect(0, 0, bmp.PixelWidth, bmp.PixelHeight));
+                bmp.AddDirtyRect(new Int32Rect(0, 0, renderWidth, renderHeight));
             }
             finally
             {
@@ -177,7 +185,7 @@ namespace SoftEngine
             // As we have a 1-D Array for our back buffer
             // we need to know the equivalent cell in 1-D based
             // on the 2D coordinates on screen
-            var index = (x + (y * bmp.PixelWidth)) * 4;
+            var index = (x + (y * renderWidth)) * 4;
 
             backBuffer[index] = (byte)(color.Blue * 255);
             backBuffer[index + 1] = (byte)(color.Green * 255);
@@ -194,17 +202,21 @@ namespace SoftEngine
             var index = x + (y * renderWidth);
             var index4 = index * 4;
 
-            if (depthBuffer[index] < z)
+            // Protecting our buffer against threads concurrencies
+            lock (lockBuffer[index])
             {
-                return; // Discard
+                if (depthBuffer[index] < z)
+                {
+                    return; // Discard
+                }
+
+                depthBuffer[index] = z;
+
+                backBuffer[index4] = (byte)(color.Blue * 255);
+                backBuffer[index4 + 1] = (byte)(color.Green * 255);
+                backBuffer[index4 + 2] = (byte)(color.Red * 255);
+                backBuffer[index4 + 3] = (byte)(color.Alpha * 255);
             }
-
-            depthBuffer[index] = z;
-
-            backBuffer[index4] = (byte)(color.Blue * 255);
-            backBuffer[index4 + 1] = (byte)(color.Green * 255);
-            backBuffer[index4 + 2] = (byte)(color.Red * 255);
-            backBuffer[index4 + 3] = (byte)(color.Alpha * 255);
         }
 
         // Project takes some 3D coordinates and transform them
@@ -217,8 +229,8 @@ namespace SoftEngine
             // The transformed coordinates will be based on coordinate system
             // starting on the center of the screen. But drawing on screen normally starts
             // from top left. We then need to transform them again to have x:0, y:0 on top left.
-            var x = (point.X * bmp.PixelWidth) + (bmp.PixelWidth / 2.0f);
-            var y = (-point.Y * bmp.PixelHeight) + (bmp.PixelHeight / 2.0f);
+            var x = (point.X * renderWidth) + (renderWidth / 2.0f);
+            var y = (-point.Y * renderHeight) + (renderHeight / 2.0f);
             return new Vector3(x, y, point.Z);
         }
 
@@ -228,7 +240,7 @@ namespace SoftEngine
         public void DrawPoint(Vector3 point, Color4 color)
         {
             // Clipping what's visible on screen
-            if (point.X >= 0 && point.Y >= 0 && point.X < bmp.PixelWidth && point.Y < bmp.PixelHeight)
+            if (point.X >= 0 && point.Y >= 0 && point.X < renderWidth && point.Y < renderHeight)
             {
                 // Drawing a yellow point
                 PutPixel((int)point.X, (int)point.Y, point.Z, color);
@@ -445,7 +457,7 @@ namespace SoftEngine
             var viewMatrix = Matrix.LookAtLH(camera.Position, camera.Target, Vector3.UnitY);
             var projectionMatrix = Matrix.PerspectiveFovRH(
                 0.78f,
-                (float)bmp.PixelWidth / bmp.PixelHeight,
+                (float)renderWidth / renderHeight,
                 0.01f,
                 1.0f);
 
@@ -459,9 +471,9 @@ namespace SoftEngine
 
                 var transformMatrix = worldMatrix * viewMatrix * projectionMatrix;
 
-                var faceIndex = 0;
-                foreach (var face in mesh.Faces)
+                Parallel.For(0, mesh.Faces.Length, faceIndex =>
                 {
+                    var face = mesh.Faces[faceIndex];
                     var vertexA = mesh.Vertices[face.A];
                     var vertexB = mesh.Vertices[face.B];
                     var vertexC = mesh.Vertices[face.C];
@@ -473,7 +485,7 @@ namespace SoftEngine
                     var color = 0.25f + ((faceIndex % mesh.Faces.Length) * 0.75f / mesh.Faces.Length);
                     DrawTriangle(pixelA, pixelB, pixelC, new Color4(color, color, color, 1));
                     faceIndex++;
-                }
+                });
             }
         }
     }
